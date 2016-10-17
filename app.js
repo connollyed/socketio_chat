@@ -1,9 +1,12 @@
 // Server Side Code
 var express = require('express'); //include express framework
+var path = require('path');
 var app = express();              //init express
 var server = require('http').createServer(app); //Create http server
 var io = require('socket.io').listen(server);   //Include sockets and listen to server
 var nicknames = [];     //Array of nicknames currently connected
+
+app.use(express.static(path.join(__dirname, 'public')));
 
 server.listen(3000);    //Make Server listen on port 3000
 
@@ -30,6 +33,10 @@ io.sockets.on('connection', function(socket){
       //Nickname has been used
         callback(false);
     }
+  });
+
+  socket.on('typing', function(user){
+    socket.broadcast.emit('user_types', user);
   });
 
   socket.on("disconnect", function(data){
