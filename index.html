@@ -1,0 +1,101 @@
+<!-- Client Side Code -->
+
+<html>
+  <head>
+    <title> Socket.io Chat </title>
+    <style type="text/css">
+      #chat{
+        height: 500px;
+        width: 300px;
+        border: 1px solid #000;
+        /*background-color: #888;*/
+      }
+      #chat_wrapper{
+        float: left;
+      }
+      #users_list{
+        height: 500px;
+        width: 200px;
+        border: 1px solid #000;
+        float:left
+      }
+      #message{
+        width: 250px;
+      }
+      #message li:nth-child(odd) { background: #eee; }
+    </style>
+  </head>
+  <body>
+
+
+    <div id="nickname">
+      <p>Enter a username</p>
+      <form id="frm-nickname">
+        <input type="text" autocomplete="off" id="name"></input>
+        <input type="submit" value="Logon"></input>
+      </form>
+    </div>
+
+
+    <div id="chat_wrapper">
+      <div id="chat"></div>
+      <form id="send-message">
+        <input type="text" autocomplete="off" id="message"></input>
+        <input type="submit" value="Send"></input>
+      </form>
+    </div>
+    <div id="users_list"></div>
+
+    <script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
+    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+
+    <script type="text/javascript">
+      $(document).ready(function(){
+
+        var socket = io.connect();
+        var $messageForm = $('#send-message');
+        var $messageBox = $('#message');
+        var $chat = $('#chat');
+        var $nicknames = $('#frm-nickname');
+        var $users_list = $('#users_list');
+        var $name = $('#name');
+
+        $nicknames.submit(function(e){
+          e.preventDefault();
+          socket.emit('valid_nickname', $name.val(),function(data){
+            if(data === true){
+              //Show chat window & hide nickname registration
+              //
+            } else {
+              //Show Error message and get user input again
+            }
+            $nicknames.val('');
+          });
+        });
+
+        socket.on('usernames', function(data){
+          console.log("IN USERNAMES");
+          var users = "";
+          for(var i=0; i<data.length; i++){
+            users = users + data[i] + "<br/>";
+          }
+          console.log(data);
+          $users_list.html(users);
+        });
+
+        $messageForm.submit(function(e){
+          e.preventDefault();
+          //Send message to server event named send_message
+          console.log("MSG");
+          socket.emit('send_message', $messageBox.val());
+          $messageBox.val('');
+        });
+
+        //
+        socket.on('new_message', function(data){
+          $chat.append(data.nick +" : " + data.msg + "<br/>");
+        });
+      }); //End of doc ready
+    </script>
+  </body>
+</html>
