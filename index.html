@@ -3,30 +3,9 @@
 <html>
   <head>
     <title> Socket.io Chat </title>
-    <style type="text/css">
-      #chat{
-        height: 500px;
-        width: 300px;
-        border: 1px solid #000;
-        /*background-color: #888;*/
-      }
-      #chat_wrapper{
-        float: left;
-      }
-      #users_list{
-        height: 500px;
-        width: 200px;
-        border: 1px solid #000;
-        float:left
-      }
-      #message{
-        width: 250px;
-      }
-      #message li:nth-child(odd) { background: #eee; }
-    </style>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
   </head>
   <body>
-
 
     <div id="nickname">
       <p>Enter a username</p>
@@ -34,6 +13,9 @@
         <input type="text" autocomplete="off" id="name"></input>
         <input type="submit" value="Logon"></input>
       </form>
+      <div id="nickname_error">
+        <p><strong>Username already taken</strong></p>
+      </div>
     </div>
 
 
@@ -45,6 +27,7 @@
       </form>
     </div>
     <div id="users_list"></div>
+    <div id="typing_info"></div>
 
     <script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
     <script type="text/javascript" src="/socket.io/socket.io.js"></script>
@@ -59,15 +42,25 @@
         var $nicknames = $('#frm-nickname');
         var $users_list = $('#users_list');
         var $name = $('#name');
+        var $typing = $('#typing_info');
+
+
+
+        $('#nickname_error').hide();
+        $('#chat_wrapper').hide();
+        $('#users_list').hide();
 
         $nicknames.submit(function(e){
           e.preventDefault();
           socket.emit('valid_nickname', $name.val(),function(data){
             if(data === true){
               //Show chat window & hide nickname registration
-              //
+              $('#nickname').hide();
+              $('#chat_wrapper').show();
+              $('#users_list').show();
             } else {
               //Show Error message and get user input again
+              $('#nickname_error').show();
             }
             $nicknames.val('');
           });
@@ -94,6 +87,23 @@
         //
         socket.on('new_message', function(data){
           $chat.append(data.nick +" : " + data.msg + "<br/>");
+        });
+
+        $messageBox.on("change input", function(data){
+          console.log("change");
+          console.log($name.val());
+          socket.emit('typing', $name.val());
+         });
+
+        socket.on('user_types', function(data){
+          // console.log(data);
+          $typing.html(data + " is typing");
+
+          //Reset timer if typing if inactive for second
+          window.clearTimeout(window.timeoutID);
+          window.timeoutID = window.setTimeout(function(){
+            $typing.html("");
+          }, 3000);
         });
       }); //End of doc ready
     </script>
